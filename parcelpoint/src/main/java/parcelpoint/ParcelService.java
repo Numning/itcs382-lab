@@ -2,6 +2,7 @@ package parcelpoint;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -76,6 +77,7 @@ public class ParcelService {
                 writer.write(parcel.getCode() + "," + parcel.status + "\n");
             }
         } catch (IOException e) {
+            throw new UncheckedIOException("Could not save parcels.csv", e);
         }
     }
 }
