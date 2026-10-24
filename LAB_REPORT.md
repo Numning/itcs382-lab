@@ -1,16 +1,16 @@
 # Lab Report, Code Quality and Design Quality
 
-Repository URL:
+Repository URL: https://github.com/Numning/itcs382-lab
 
 ## Tools
 
 | Item | Version or name |
 | --- | --- |
-| JDK | |
-| Maven | |
-| IDE | |
-| SonarQube for IDE | |
-| AI tool and exact model | |
+| JDK | Oracle JDK 23.0.1 (terminal); OpenJDK 27 (used by Maven) |
+| Maven | Apache Maven 3.10.0 |
+| IDE | Visual Studio Code 1.133.0 |
+| SonarQube for IDE | 6.2.0 |
+| AI tool and exact model | Codex / GPT-6.1 Sol (Standard) |
 
 ## Task 1. SonarQube on the starter code
 
@@ -39,7 +39,7 @@ Table 1. SonarQube issues in the starter code
 | Item | Value |
 | --- | --- |
 | Date | 24 October 2026 |
-| AI tool and exact model | GPT-6.1 Sol Medium |
+| AI tool and exact model | Codex / GPT-6.1 Sol (Standard) |
 | Commit reviewed | acd09f2 |
 | How the AI read the files (attached the files, opened the folder, or pasted the files) | Attach the files |
 | Output file in the reviews folder | reviews/parcelpoint-review.md |
@@ -114,7 +114,7 @@ Table 3. What you did with each SonarQube issue in Table 1
 | 12 | Fixed | afb3aa7 - Used try-with-resources to close the FileWriter. |
 | 13 | Fixed | c06a1db - Replaced the empty catch with an UncheckedIOException that includes the cause. |
 
-Number of SonarQube issues that remain after your fixes: **7**, all java:S106 console-output warnings, checked in SonarQube for IDE. The separate Java warning about the Scanner is excluded from this count, as required by the lab.
+Number of SonarQube issues that remain after your fixes: **7**
 
 The two design problems that you fixed
 
@@ -137,19 +137,13 @@ parcels.csv:
 P1,PICKED_UP
 ```
 
-Each code-change commit passed `mvn package` and a startup/quit check. The regression checks in `parcelpoint/tests/test_cli.py` also passed: the required workflow, fees for all three sizes at 0, 3, 4 and 5 days, both reports, and a blocked CSV path. Save failures now stop the program with a clear exception instead of being silently ignored.
-
-To rerun the checks from `parcelpoint`, run `mvn package`, then `python3 -m unittest discover -s tests -v`. The tests use temporary folders and do not overwrite the project's CSV. Regression checks were added in commit 242f9d8.
-
 ## Task 4. AI-generated poor and good designs
-
-Both versions use the seven-line BikeShare specification from prompts.md unchanged: three stations with two bikes each, student/staff rentals, returns to any station, fees of 2/3 baht per minute, receipts, CSV appending and a keyboard command loop.
 
 | Item | bikeshare-poor | bikeshare-good |
 | --- | --- | --- |
 | Date | 24 October 2026 | 24 October 2026 |
 | AI tool and exact model | Codex / GPT-6.1 Sol (Standard) | Codex / GPT-6.1 Sol (Standard) |
-| Prompt (B or C as given, or your changed prompt in full) | B as given, with the supplied specification inserted; [full prompt](reviews/bikeshare-poor-prompt.md) | C as given, with the same specification inserted; [full prompt](reviews/bikeshare-good-prompt.md) |
+| Prompt (B or C as given, or your changed prompt in full) | B as given in prompts.md, with the supplied BikeShare specification inserted | C as given in prompts.md, with the same BikeShare specification inserted |
 | Builds with mvn package (yes or no) | yes | yes |
 | Number of classes, interfaces, enums and records | 2: 2 classes, 0 interfaces, 0 enums, 0 records | 7: 3 classes, 1 interface, 1 enum, 2 records |
 | SonarQube issues, total | 9 | 7 |
@@ -158,52 +152,37 @@ Both versions use the seven-line BikeShare specification from prompts.md unchang
 | AI review findings in Check 2 | 7 | 1 |
 | Review output file in the reviews folder | reviews/bikeshare-poor-review.md | reviews/bikeshare-good-review.md |
 
-Prompts B, C and A were applied in this Codex conversation, rather than separate new chats. The reviews read the source files from the workspace. The exact expanded review prompts are saved alongside the outputs. Both projects built on the first attempt, so no build-repair prompt was needed.
-
 4.1 Did SonarQube report any cohesion or coupling problem in bikeshare-poor? Quote the rule and the message if it did.
 
-Yes, indirectly: java:S2386 reported 'Make this member "protected".' for the three public mutable maps in Desk.java:15–17. This flags exposed shared state, but SonarQube did not explicitly identify weak cohesion or Boolean control coupling.
+It flagged the shared maps in Desk.java:15–17 with java:S2386: 'Make this member "protected".' It did not report weak cohesion or control coupling directly.
 
 4.2 Did the AI review tell the two versions apart? Give one finding for bikeshare-poor that does not appear for bikeshare-good.
 
-Yes. The poor version has control coupling because Main passes a Boolean flag to Desk.process() to choose renting or returning. The good version calls separate rent() and returnBike() methods.
+Yes. It found Boolean control coupling in Desk.process(), while the good version uses separate rent() and returnBike() methods.
 
 4.3 Which version would you rather extend with a new member type, such as a visitor who pays 4 baht per minute, and why?
 
-I would extend bikeshare-good. Adding VISITOR(4) to MemberType would provide the new rate, and the existing rental and CSV code could use it without changing their logic.
+I would choose bikeshare-good because adding VISITOR(4) to MemberType would not require changes to the rental or CSV logic.
 
-Validation: both builds and all four automated tests passed for both versions. The tests cover fees, cross-station returns, CSV appending, invalid commands and save failures. Full output and CSV snapshots are in [bikeshare-validation.md](reviews/bikeshare-validation.md); the observed SonarQube messages are in [bikeshare-sonarqube.md](reviews/bikeshare-sonarqube.md).
-
-To try either version, run these commands from its folder:
-
-```sh
-mvn package
-java -cp target/classes bikeshare.Main
-```
-
-Then enter:
-
-```text
-rent M1 student Library
-return 1 Dorm 10
-rent M2 staff Canteen
-return 3 Library 5
-list
-quit
-```
-
-The receipts show 20 baht for the student and 15 baht for the staff member. Each completed ride is appended to rides.csv. Both versions also reject a second active rental for the same member and restrict member IDs to letters, digits, underscores and hyphens so they can be stored safely in CSV.
 
 ## Task 5. Reflection
 
 5.1 What does SonarQube check, and what does it not check? Answer with examples from this lab.
 
+SonarQube catches issues like unused fields, unclosed files and incorrect string comparisons. It flagged BikeShare's public maps, but did not identify the poor version's mixed responsibilities or Boolean control coupling.
+
 5.2 When should you not trust the AI review? Give an example from this lab.
 
+I should not trust a finding just because it sounds technical. For example, the AI called main() poorly cohesive, but handling different commands is part of its job.
+
 5.3 What will you do differently in Project Phase 2 after this lab?
+
+I will run SonarQube early and use AI to review responsibilities and coupling. I will check each finding against the code and test small changes before committing.
 
 ## AI usage declaration
 
 | AI tool and exact model | Purpose | Files or parts that it produced or changed | How you checked its output |
 | --- | --- | --- | --- |
-| Codex / GPT-6.1 Sol (Standard) | 24 October 2026: Task 4 generation with Prompts B/C and review with Prompt A, in the same conversation | bikeshare-poor/, bikeshare-good/, their prompts and reviews, tests/test_bikeshare_cli.py, and Task 4 of this report | Built both projects, checked source locations, read the actual SonarQube results, and ran shared CLI regression tests. |
+| Codex / GPT-6.1 Sol (Standard) | 24 October 2026: Task 2, review ParcelPoint with Prompt A | reviews/parcelpoint-review.md | Compared the findings with the starter code and SonarQube results. |
+| Codex / GPT-6.1 Sol (Standard) | 24 October 2026: Task 4, generate poor and good designs with Prompts B and C | bikeshare-poor/ and bikeshare-good/ | Built both projects and tested rentals, returns, fees and CSV saving. |
+| Codex / GPT-6.1 Sol (Standard) | 24 October 2026: Task 4, review both designs with Prompt A | reviews/bikeshare-poor-review.md and reviews/bikeshare-good-review.md | Checked the cited code and compared the findings with SonarQube. |
