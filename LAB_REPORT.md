@@ -143,24 +143,56 @@ To rerun the checks from `parcelpoint`, run `mvn package`, then `python3 -m unit
 
 ## Task 4. AI-generated poor and good designs
 
+Both versions use the seven-line BikeShare specification from prompts.md unchanged: three stations with two bikes each, student/staff rentals, returns to any station, fees of 2/3 baht per minute, receipts, CSV appending and a keyboard command loop.
+
 | Item | bikeshare-poor | bikeshare-good |
 | --- | --- | --- |
-| Date | | |
-| AI tool and exact model | | |
-| Prompt (B or C as given, or your changed prompt in full) | | |
-| Builds with mvn package (yes or no) | | |
-| Number of classes, interfaces, enums and records | | |
-| SonarQube issues, total | | |
-| SonarQube issues, by rule | | |
-| AI review findings in Check 1 | | |
-| AI review findings in Check 2 | | |
-| Review output file in the reviews folder | | |
+| Date | 24 October 2026 | 24 October 2026 |
+| AI tool and exact model | Codex / GPT-6.1 Sol (Standard) | Codex / GPT-6.1 Sol (Standard) |
+| Prompt (B or C as given, or your changed prompt in full) | B as given, with the supplied specification inserted; [full prompt](reviews/bikeshare-poor-prompt.md) | C as given, with the same specification inserted; [full prompt](reviews/bikeshare-good-prompt.md) |
+| Builds with mvn package (yes or no) | yes | yes |
+| Number of classes, interfaces, enums and records | 2: 2 classes, 0 interfaces, 0 enums, 0 records | 7: 3 classes, 1 interface, 1 enum, 2 records |
+| SonarQube issues, total | 9 | 7 |
+| SonarQube issues, by rule | java:S106: 6; java:S2386: 3 | java:S106: 7 |
+| AI review findings in Check 1 | 1 | 0 |
+| AI review findings in Check 2 | 7 | 1 |
+| Review output file in the reviews folder | reviews/bikeshare-poor-review.md | reviews/bikeshare-good-review.md |
+
+Prompts B, C and A were applied in this Codex conversation, rather than separate new chats. The reviews read the source files from the workspace. The exact expanded review prompts are saved alongside the outputs. Both projects built on the first attempt, so no build-repair prompt was needed.
 
 4.1 Did SonarQube report any cohesion or coupling problem in bikeshare-poor? Quote the rule and the message if it did.
 
+Yes, indirectly: java:S2386 reported 'Make this member "protected".' for the three public mutable maps in Desk.java:15–17. This flags exposed shared state, but SonarQube did not explicitly identify weak cohesion or Boolean control coupling.
+
 4.2 Did the AI review tell the two versions apart? Give one finding for bikeshare-poor that does not appear for bikeshare-good.
 
+Yes. The poor version has control coupling because Main passes a Boolean flag to Desk.process() to choose renting or returning. The good version calls separate rent() and returnBike() methods.
+
 4.3 Which version would you rather extend with a new member type, such as a visitor who pays 4 baht per minute, and why?
+
+I would extend bikeshare-good. Adding VISITOR(4) to MemberType would provide the new rate, and the existing rental and CSV code could use it without changing their logic.
+
+Validation: both builds and all four automated tests passed for both versions. The tests cover fees, cross-station returns, CSV appending, invalid commands and save failures. Full output and CSV snapshots are in [bikeshare-validation.md](reviews/bikeshare-validation.md); the observed SonarQube messages are in [bikeshare-sonarqube.md](reviews/bikeshare-sonarqube.md).
+
+To try either version, run these commands from its folder:
+
+```sh
+mvn package
+java -cp target/classes bikeshare.Main
+```
+
+Then enter:
+
+```text
+rent M1 student Library
+return 1 Dorm 10
+rent M2 staff Canteen
+return 3 Library 5
+list
+quit
+```
+
+The receipts show 20 baht for the student and 15 baht for the staff member. Each completed ride is appended to rides.csv. Both versions also reject a second active rental for the same member and restrict member IDs to letters, digits, underscores and hyphens so they can be stored safely in CSV.
 
 ## Task 5. Reflection
 
@@ -174,4 +206,4 @@ To rerun the checks from `parcelpoint`, run `mvn package`, then `python3 -m unit
 
 | AI tool and exact model | Purpose | Files or parts that it produced or changed | How you checked its output |
 | --- | --- | --- | --- |
-| | | | |
+| Codex / GPT-6.1 Sol (Standard) | 24 October 2026: Task 4 generation with Prompts B/C and review with Prompt A, in the same conversation | bikeshare-poor/, bikeshare-good/, their prompts and reviews, tests/test_bikeshare_cli.py, and Task 4 of this report | Built both projects, checked source locations, read the actual SonarQube results, and ran shared CLI regression tests. |
