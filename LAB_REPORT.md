@@ -100,22 +100,46 @@ Table 3. What you did with each SonarQube issue in Table 1
 
 | No. in Table 1 | Fixed or kept | Commit, or the reason for keeping it |
 | --- | --- | --- |
-| 1 | | |
+| 1 | Kept | System.out displays the command-line help to the user. |
+| 2 | Kept | System.out displays the storage result to the user. |
+| 3 | Kept | System.out displays the pickup fee to the user. |
+| 4 | Kept | System.out displays the number of free lockers to staff. |
+| 5 | Fixed | 6a8e653 - Removed the unused legacy Date import; no date API is needed. |
+| 6 | Fixed | 6a8e653 - Removed the unused Date import. |
+| 7 | Fixed | 2f7a618 - Removed the unused maxParcels field. |
+| 8 | Kept | System.out displays the simulated SMS notification in this command-line lab. |
+| 9 | Fixed | 18bd374 - Used Objects.equals() to compare parcel codes by value. |
+| 10 | Kept | System.out displays the staff parcel report. |
+| 11 | Kept | System.out displays the waiting-parcel report. |
+| 12 | Fixed | afb3aa7 - Used try-with-resources to close the FileWriter. |
+| 13 | Fixed | c06a1db - Replaced the empty catch with an UncheckedIOException that includes the cause. |
 
-Number of SonarQube issues that remain after your fixes:
+Number of SonarQube issues that remain after your fixes: **7**, all java:S106 console-output warnings, checked in SonarQube for IDE. The separate Java warning about the Scanner is excluded from this count, as required by the lab.
 
 The two design problems that you fixed
 
 | Design problem (course term) | What you changed | Commit |
 | --- | --- | --- |
-| | | |
-| | | |
+| Control coupling (Table 2, finding 13) | Replaced printParcels(boolean) with printWaitingParcels() and printStaffParcels(), so Main no longer passes a behavior flag. | b4d0374 |
+| Stamp coupling (Table 2, finding 16) | Changed fee() to accept size and days instead of a whole Parcel, and updated pickup to pass the size. | 408e25b |
 
 Output of the program after your fixes, for the commands `store P1 6501 2`, `pickup P1 5` and `staff`, and the content of parcels.csv:
 
 ```text
+Commands: store <code> <studentId> <size 1-3>, pickup <code> <days>, list, staff, quit
+SMS to 6501: parcel P1 is in locker 2
+Locker 2
+Fee: 30.0
+P1 6501 PICKED_UP
+Free lockers: 3
 
+parcels.csv:
+P1,PICKED_UP
 ```
+
+Each code-change commit passed `mvn package` and a startup/quit check. The regression checks in `parcelpoint/tests/test_cli.py` also passed: the required workflow, fees for all three sizes at 0, 3, 4 and 5 days, both reports, and a blocked CSV path. Save failures now stop the program with a clear exception instead of being silently ignored.
+
+To rerun the checks from `parcelpoint`, run `mvn package`, then `python3 -m unittest discover -s tests -v`. The tests use temporary folders and do not overwrite the project's CSV. Regression checks were added in commit 242f9d8.
 
 ## Task 4. AI-generated poor and good designs
 
