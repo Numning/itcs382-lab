@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ParcelService {
     private List<Locker> lockers = new ArrayList<>();
@@ -37,7 +38,7 @@ public class ParcelService {
     public double pickUp(String code, int days) {
         for (Locker locker : lockers) {
             Parcel parcel = locker.getParcel();
-            if (parcel != null && parcel.getCode() == code) {
+            if (parcel != null && Objects.equals(parcel.getCode(), code)) {
                 locker.setParcel(null);
                 parcel.status = "PICKED_UP";
                 saveToFile();
